@@ -106,7 +106,7 @@ ORDER BY ?productionLabel
 }).then(function (result) {
   result.bindingsStream.on('data', function (data) {
    
-    document.getElementById("test").innerHTML += "<tr><td><a target='_blank' href= 4vertical_detailsncredits.html?q=" + data.get('?production').value.split("Q").pop() + ">" + data.get('?productionLabel').value + "</a></td><td>" + data.get('?role').value + "</td></tr>";
+    document.getElementById("test").innerHTML += "<tr><td><a target='_blank' href= dynamic_details_credits.html?q=" + data.get('?production').value.split("Q").pop() + ">" + data.get('?productionLabel').value + "</a></td><td>" + data.get('?role').value + "</td></tr>";
 
    });
 });
