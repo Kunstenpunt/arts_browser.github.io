@@ -1,0 +1,376 @@
+<html>
+<script src="http://rdf.js.org/comunica-browser/versions/1/packages/actor-init-sparql/comunica-browser.js"></script>
+
+<body>
+<h1 id="title">Credits/Production Details: </h1>
+<h2>Credits</h2>
+<table id="test" border=1>
+  <tr id="director">
+    <th>Director</th>
+  </tr>
+  <tr id="producer">
+    <th>Producer</th>
+  </tr>
+  <tr id="creator">
+    <th>Creator</td>
+  </tr>
+  <tr id="castmember">
+    <th>Cast member</th>
+  </tr>
+  <tr id="performer">
+    <th>Performer</th>
+  </tr>
+  <tr id="choreographer">
+    <th>Choreographer</th>
+  </tr>
+  <tr id="composer">
+    <th>Composer</th>
+  </tr>
+  <tr id="author">
+    <th>Author</th>
+  </tr>
+  <tr id="screenwriter">
+    <th>Screenwriter</th>
+  </tr>
+  <tr id="musicalconductor">
+    <th>Musical conductor</th>
+  </tr>
+  <tr id="costumedesigner">
+    <th>Costume designer</th>
+  </tr>
+  <tr id="lightingdesigner">
+    <th>Lighting designer</th>
+  </tr>
+  <tr id="sounddesigner">
+    <th>Sound designer</th>
+  </tr>
+  <tr id="scenographer">
+    <th>Scenographer</th>
+  </tr>
+  <tr id="librettist">
+    <th>Librettist</th>
+  </tr>
+  <tr id="dramaturge">
+    <th>Dramaturge</th>
+  </tr>
+  <tr id="contributor">
+    <th>Contributor</th>
+  </tr>
+  <tr id="afteraworkby">
+    <th>After a work by</th>
+  </tr>
+</table>
+
+<script language="JavaScript">  
+  function GetURLParameter(sParam)
+  {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+      var sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] == sParam) 
+      {
+        return sParameterName[1];   }  }  };
+
+  var q = GetURLParameter('q')
+
+  Comunica.newEngine().query(`
+  PREFIX wd: <http://www.wikidata.org/entity/>
+  PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+  PREFIX wikibase: <http://wikiba.se/ontology#>
+  PREFIX p: <http://www.wikidata.org/prop/>
+  PREFIX ps: <http://www.wikidata.org/prop/statement/>
+  PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX bd: <http://www.bigdata.com/rdf#>
+
+SELECT ?production ?productionLabel 
+(GROUP_CONCAT(DISTINCT ?directorLabel; SEPARATOR=", ") AS ?director)
+(GROUP_CONCAT(DISTINCT ?director; SEPARATOR=", ") AS ?directorq)
+(GROUP_CONCAT(DISTINCT ?producerLabel; SEPARATOR=", ") AS ?producer)
+(GROUP_CONCAT(DISTINCT ?producer; SEPARATOR=", ") AS ?producerq)
+(GROUP_CONCAT(DISTINCT ?creatorLabel; SEPARATOR=", ") AS ?creator)
+(GROUP_CONCAT(DISTINCT ?creator; SEPARATOR=", ") AS ?creatorq)
+(GROUP_CONCAT(DISTINCT ?performerLabel; SEPARATOR=", ") AS ?performer)
+(GROUP_CONCAT(DISTINCT ?performer; SEPARATOR=", ") AS ?performerq)
+(GROUP_CONCAT(DISTINCT ?cast_memberLabel; SEPARATOR=", ") AS ?cast_member)
+(GROUP_CONCAT(DISTINCT ?cast_member; SEPARATOR=", ") AS ?cast_memberq)
+(GROUP_CONCAT(DISTINCT ?choreographerLabel; SEPARATOR=", ") AS ?choreographer)
+(GROUP_CONCAT(DISTINCT ?choreographer; SEPARATOR=", ") AS ?choreographerq)
+(GROUP_CONCAT(DISTINCT ?authorLabel; SEPARATOR=", ") AS ?author)
+(GROUP_CONCAT(DISTINCT ?author; SEPARATOR=", ") AS ?authorq)
+(GROUP_CONCAT(DISTINCT ?composerLabel; SEPARATOR=", ") AS ?composer)
+(GROUP_CONCAT(DISTINCT ?composer; SEPARATOR=", ") AS ?composerq)
+(GROUP_CONCAT(DISTINCT ?screenwriterLabel; SEPARATOR=", ") AS ?screenwriter)
+(GROUP_CONCAT(DISTINCT ?screenwriter; SEPARATOR=", ") AS ?screenwriterq)
+
+WHERE {
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,nl,fr,de".
+                         ?production rdfs:label ?productionLabel.
+                         ?director rdfs:label ?directorLabel.
+                         ?producer rdfs:label ?producerLabel.
+                         ?creator  rdfs:label ?creatorLabel.
+                         ?performer  rdfs:label ?performerLabel.
+                         ?cast_member  rdfs:label ?cast_memberLabel.
+                         ?choreographer  rdfs:label ?choreographerLabel.
+                         ?author  rdfs:label ?authorLabel.
+                         ?composer  rdfs:label ?composerLabel.
+                         ?screenwriter   rdfs:label ?screenwriterLabel.      }
+  BIND(wd:Q${q} as ?production)
+  OPTIONAL { ?production wdt:P57 ?director.}
+  OPTIONAL { ?production wdt:P162 ?producer.}
+  OPTIONAL { ?production wdt:P170 ?creator.}
+  OPTIONAL { ?production wdt:P175 ?performer.}
+  OPTIONAL { ?production wdt:P161 ?cast_member.}
+  OPTIONAL { ?production wdt:P1809 ?choreographer.}
+  OPTIONAL { ?production wdt:P50 ?author.}
+  OPTIONAL { ?production wdt:P86 ?composer.}
+  OPTIONAL { ?production wdt:P58 ?screenwriter.}}
+  GROUP BY ?production ?productionLabel
+`, {
+  sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+}).then(function (result) {
+  result.bindingsStream.on('data', function (data) {
+    document.getElementById("title").innerHTML += "<b>" + data.get('?productionLabel').value + "</b>";
+  document.getElementById("director").innerHTML += "<td id='directortd'>"
+  data.get('?directorq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("directortd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?director').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("producer").innerHTML += "<td id='producertd'>"
+  data.get('?producerq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("producertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?producer').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("creator").innerHTML += "<td id='creatortd'>"
+  data.get('?creatorq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("creatortd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?creator').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("screenwriter").innerHTML += "<td id='screenwritertd'>"
+  data.get('?screenwriterq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("screenwritertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?screenwriter').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("castmember").innerHTML += "<td id='castmembertd'>"
+  data.get('?cast_memberq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("castmembertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?cast_member').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("performer").innerHTML += "<td id='performertd'>"
+  data.get('?performerq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("performertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?performer').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("choreographer").innerHTML += "<td id='choreographertd'>"
+  data.get('?choreographerq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("choreographertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?choreographer').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("composer").innerHTML += "<td id='composertd'>"
+  data.get('?composerq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("composertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?composer').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("author").innerHTML += "<td id='authortd'>"
+  data.get('?authorq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("authortd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?author').value.split(", ")[index] + "</a> ";  });
+  });
+});
+</script>
+
+<script language="JavaScript">  
+  function GetURLParameter(sParam)
+  {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+      var sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] == sParam) 
+      {
+        return sParameterName[1];   }  }  };
+
+  var q = GetURLParameter('q')
+
+  Comunica.newEngine().query(`
+  PREFIX wd: <http://www.wikidata.org/entity/>
+  PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+  PREFIX wikibase: <http://wikiba.se/ontology#>
+  PREFIX p: <http://www.wikidata.org/prop/>
+  PREFIX ps: <http://www.wikidata.org/prop/statement/>
+  PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX bd: <http://www.bigdata.com/rdf#>
+
+SELECT ?production ?productionLabel 
+(GROUP_CONCAT(DISTINCT ?musical_conductorLabel; SEPARATOR=", ") AS ?musical_conductor)
+(GROUP_CONCAT(DISTINCT ?musical_conductor; SEPARATOR=", ") AS ?musical_conductorq)
+(GROUP_CONCAT(DISTINCT ?costume_designerLabel; SEPARATOR=", ") AS ?costume_designer)
+(GROUP_CONCAT(DISTINCT ?costume_designer; SEPARATOR=", ") AS ?costume_designerq)
+(GROUP_CONCAT(DISTINCT ?lighting_designerLabel; SEPARATOR=", ") AS ?lighting_designer)
+(GROUP_CONCAT(DISTINCT ?lighting_designer; SEPARATOR=", ") AS ?lighting_designerq)
+(GROUP_CONCAT(DISTINCT ?sound_designerLabel; SEPARATOR=", ") AS ?sound_designer)
+(GROUP_CONCAT(DISTINCT ?sound_designer; SEPARATOR=", ") AS ?sound_designerq)
+(GROUP_CONCAT(DISTINCT ?scenographerLabel; SEPARATOR=", ") AS ?scenographer)
+(GROUP_CONCAT(DISTINCT ?scenographer; SEPARATOR=", ") AS ?scenographerq)
+(GROUP_CONCAT(DISTINCT ?librettistLabel; SEPARATOR=", ") AS ?librettist)
+(GROUP_CONCAT(DISTINCT ?librettist; SEPARATOR=", ") AS ?librettistq)
+(GROUP_CONCAT(DISTINCT ?dramaturgeLabel; SEPARATOR=", ") AS ?dramaturge)
+(GROUP_CONCAT(DISTINCT ?dramaturge; SEPARATOR=", ") AS ?dramaturgeq)
+(GROUP_CONCAT(DISTINCT ?contributorLabel; SEPARATOR=", ") AS ?contributor)
+(GROUP_CONCAT(DISTINCT ?contributor; SEPARATOR=", ") AS ?contributorq)
+(GROUP_CONCAT(DISTINCT ?after_a_work_byLabel; SEPARATOR=", ") AS ?after_a_work_by)
+(GROUP_CONCAT(DISTINCT ?after_a_work_by; SEPARATOR=", ") AS ?after_a_work_byq)
+WHERE {
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,nl,fr,de".
+                          ?musical_conductor  rdfs:label ?musical_conductorLabel.
+                         ?costume_designer  rdfs:label ?costume_designerLabel.
+                         ?lighting_designer  rdfs:label ?lighting_designerLabel.
+                         ?sound_designer  rdfs:label ?sound_designerLabel.
+                         ?scenographer  rdfs:label ?scenographerLabel.
+                         ?librettist  rdfs:label ?librettistLabel.
+                         ?dramaturge  rdfs:label ?dramaturgeLabel.
+                         ?contributor  rdfs:label ?contributorLabel.
+                         ?after_a_work_by  rdfs:label ?after_a_work_byLabel.  }
+ BIND(wd:Q${q} as ?production)
+  OPTIONAL { ?production wdt:P3300 ?musical_conductor.}
+  OPTIONAL { ?production wdt:P2515 ?costume_designer.}
+  OPTIONAL { ?production wdt:P5026 ?lighting_designer.}
+  OPTIONAL { ?production wdt:P5028 ?sound_designer.}
+  OPTIONAL { ?production wdt:P4608 ?scenographer.}
+  OPTIONAL { ?production wdt:P87 ?librettist.}
+  OPTIONAL { ?production wdt:P6086 ?dramaturge.}
+  OPTIONAL { ?production wdt:P767 ?contributor.}
+  OPTIONAL { ?production wdt:P1877 ?after_a_work_by.} }
+
+GROUP BY ?production ?productionLabel
+`, {
+  sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+}).then(function (result) {
+  result.bindingsStream.on('data', function (data) {
+    
+  document.getElementById("musicalconductor").innerHTML += "<td id='musicalconductortd'>"
+  data.get('?musical_conductorq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("musicalconductortd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?musical_conductor').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("costumedesigner").innerHTML += "<td id='costumedesignertd'>"
+  data.get('?costume_designerq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("costumedesignertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?costume_designer').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("lightingdesigner").innerHTML += "<td id='lightingdesignertd'>"
+  data.get('?lighting_designerq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("lightingdesignertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?lighting_designer').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("sounddesigner").innerHTML += "<td id='sounddesignertd'>"
+  data.get('?sound_designerq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("sounddesignertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?sound_designer').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("scenographer").innerHTML += "<td id='scenographertd'>"
+  data.get('?scenographerq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("scenographertd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?scenographer').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("librettist").innerHTML += "<td id='librettisttd'>"
+  data.get('?librettistq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("librettisttd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?librettist').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("dramaturge").innerHTML += "<td id='dramaturgetd'>"
+  data.get('?dramaturgeq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("dramaturgetd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?dramaturge').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("contributor").innerHTML += "<td id='contributortd'>"
+  data.get('?contributorq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("contributortd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?contributor').value.split(", ")[index] + "</a> ";  });
+
+  document.getElementById("afteraworkby").innerHTML += "<td id='afteraworkbytd'>"
+  data.get('?after_a_work_byq').value.split(", ").forEach(function(item, index) {
+    document.getElementById("afteraworkbytd").innerHTML += "<a href=person_details.html?q=" + item.split("Q").pop() + ">" + data.get('?after_a_work_by').value.split(", ")[index] + "</a> ";  });
+  });
+});
+</script>
+
+<h2>Production Details</h2>
+<table id="test1" border=1>
+  <tr id="name">
+  <th>Name</th>
+  </tr>
+  <tr id="instance">
+  <th>Instance</th>
+  </tr>
+  <tr id="genre">
+  <th>Genre</th>
+  </tr>
+  <tr id="production_company">
+  <th>Production company</th>
+  </tr>
+  <tr id="language">
+  <th>Language</th>
+  </tr>
+  <tr id="location1stperformance">
+  <th>Location of 1st Performance</th>
+  </tr>
+  <tr id="kunstenpunt">
+  <th>Kunstenpunt ID</th>
+  </tr>
+</table>
+
+<script language="JavaScript">
+  function GetURLParameter(sParam)
+  {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+      var sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] == sParam) 
+      {
+        return sParameterName[1];   }  }  };
+
+  var q = GetURLParameter('q')
+  
+  Comunica.newEngine().query(`
+  PREFIX wd: <http://www.wikidata.org/entity/>
+  PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+  PREFIX wikibase: <http://wikiba.se/ontology#>
+  PREFIX p: <http://www.wikidata.org/prop/>
+  PREFIX ps: <http://www.wikidata.org/prop/statement/>
+  PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX bd: <http://www.bigdata.com/rdf#>
+
+SELECT ?production ?productionLabel 
+(GROUP_CONCAT(DISTINCT ?instance_ofLabel; SEPARATOR=", ") AS ?instance_of)
+(GROUP_CONCAT(DISTINCT ?genreLabel; SEPARATOR=", ") AS ?genre)
+(GROUP_CONCAT(DISTINCT ?production_companyLabel; SEPARATOR=", ") AS ?production_company)
+(GROUP_CONCAT(DISTINCT ?languageLabel; SEPARATOR=", ") AS ?language)
+(GROUP_CONCAT(DISTINCT ?location_1stperformanceLabel; SEPARATOR=", ") AS ?location_1stperformance)
+(GROUP_CONCAT(DISTINCT ?KunstenpuntIDLabel; SEPARATOR=", ") AS ?KunstenpuntID)
+
+WHERE {
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,nl,fr,de".
+                         ?production rdfs:label ?productionLabel.
+                         ?instance_of rdfs:label ?instance_ofLabel.
+                         ?genre rdfs:label ?genreLabel.
+                         ?production_company  rdfs:label ?production_companyLabel.
+                         ?language  rdfs:label ?languageLabel.
+                         ?location_1stperformance  rdfs:label ?location_1stperformanceLabel.
+                         ?KunstenpuntID  rdfs:label ?KunstenpuntIDLabel.
+                         }
+  BIND(wd:Q${q} as ?production)
+  OPTIONAL { ?production wdt:P31 ?instance_of.}  
+  OPTIONAL { ?production wdt:P136 ?genre.}
+  OPTIONAL { ?production wdt:P272 ?production_company.}
+  OPTIONAL { ?production wdt:P407 ?language.}
+  OPTIONAL { ?production wdt:P4647 ?location_1stperformance.}
+  OPTIONAL { ?production wdt:P5935 ?KunstenpuntID.}
+ }
+GROUP BY ?production ?productionLabel
+
+`, {
+  sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+}).then(function (result) {
+  result.bindingsStream.on('data', function (data) {
+  document.getElementById("name").innerHTML += "<td>" + data.get('?productionLabel').value + "</td>";
+  document.getElementById("instance").innerHTML += "<td>" + data.get('?instance_of').value + "</td>";
+  document.getElementById("genre").innerHTML += "<td>" + data.get('?genre').value + "</td>";
+  document.getElementById("production_company").innerHTML += "<td>" + data.get('?production_company').value + "</td>";
+  document.getElementById("language").innerHTML += "<td>" + data.get('?language').value + "</td>";
+  document.getElementById("location1stperformance").innerHTML += "<td>" + data.get('?location_1stperformance').value + "</td>";
+  document.getElementById("kunstenpunt").innerHTML += "<td>" + data.get('?KunstenpuntID').value + "</td>";
+  });
+});
+</script>
+</html>

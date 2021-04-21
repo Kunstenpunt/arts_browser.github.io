@@ -1,0 +1,68 @@
+<html>
+<script src="http://rdf.js.org/comunica-browser/versions/1/packages/actor-init-sparql/comunica-browser.js"></script>
+
+<body>
+<h1>Productions</h1>
+<table id="test" border=1>
+<tr>
+<th>Production name</th>
+<th>Kunstenpunt entry</th>
+<th>Instance</th>
+</tr>
+</table>
+
+<script language="JavaScript">
+  function GetURLParameter(sParam)
+  {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+      var sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] == sParam) 
+      {
+        return sParameterName[1];
+      }
+    }
+  };
+
+  var q = GetURLParameter('q')
+  
+  Comunica.newEngine().query(`
+  PREFIX wd: <http://www.wikidata.org/entity/>
+  PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+  PREFIX wikibase: <http://wikiba.se/ontology#>
+  PREFIX p: <http://www.wikidata.org/prop/>
+  PREFIX ps: <http://www.wikidata.org/prop/statement/>
+  PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX bd: <http://www.bigdata.com/rdf#>
+
+SELECT DISTINCT
+?production ?productionLabel 
+(GROUP_CONCAT(DISTINCT ?instanceLabel; SEPARATOR=", ") AS ?instance)
+(GROUP_CONCAT(DISTINCT ?kporgidLabel; SEPARATOR=", ") AS ?kporgid)
+
+WHERE {
+  ?production wdt:P272 wd:Q${q}.
+  ?production wdt:P31 ?instance.
+  ?production wdt:P5935 ?kporgid.
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,nl,fr,de". 
+                           ?production rdfs:label ?productionLabel.
+                           ?instance rdfs:label ?instanceLabel.                            
+                           ?kporgid rdfs:label ?kporgidLabel.
+                            }
+}
+GROUP BY ?production ?productionLabel
+ORDER BY ASC(UCASE(str(?productionLabel)))
+
+`, {
+  sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+}).then(function (result) {
+  result.bindingsStream.on('data', function (data) {
+    document.getElementById("test").innerHTML += "<tr><td><a target='_blank' href= dynamic_details_credits.html?q=" + data.get('?production').value.split("Q").pop() + ">" + data.get('?productionLabel').value + "</a></td><td><a href=http://data.kunsten.be/organisations/" + data.get('?kporgid').value + ">Kunstenpunt</a></td><td>" + data.get('?instance').value + "</td></tr>";
+  });
+});
+</script>
+</html>

@@ -1,0 +1,64 @@
+<html>
+<script src="http://rdf.js.org/comunica-browser/versions/1/packages/actor-init-sparql/comunica-browser.js"></script>
+
+<body>
+<h1>Production Companies in Belgium</h1>
+<table id="test" border=1>
+<tr>
+<th>Company</th>
+<th>Kunstenpunt entry</th>
+<th>Instance</th>
+</tr>
+</table>
+
+<script language="JavaScript">
+  Comunica.newEngine().query(`
+  PREFIX wd: <http://www.wikidata.org/entity/>
+  PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+  PREFIX wikibase: <http://wikiba.se/ontology#>
+  PREFIX p: <http://www.wikidata.org/prop/>
+  PREFIX ps: <http://www.wikidata.org/prop/statement/>
+  PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX bd: <http://www.bigdata.com/rdf#>
+
+  #Geiten
+  SELECT 
+  ?company ?companyLabel 
+  (GROUP_CONCAT(DISTINCT ?instanceLabel; SEPARATOR=", ") AS ?instance)
+  (GROUP_CONCAT(DISTINCT ?kporgidLabel; SEPARATOR=", ") AS ?kporgid)
+  WHERE {
+    ?company wdt:P17 wd:Q31.
+    ?company wdt:P31 ?instance.
+    ?company wdt:P5164 ?kporgid.
+    {?company wdt:P31 wd:Q2393314 }
+    UNION
+    {?company wdt:P31 wd:Q132241 }
+    UNION
+    {?company wdt:P31 wd:Q1060829 }
+    UNION
+    {?company wdt:P31 wd:Q24354 }
+    UNION  
+    {?company wdt:P31 wd:Q1751626 }
+    UNION  
+    {?company wdt:P31 wd:Q868557 }
+    UNION  
+    {?company wdt:P31 wd:Q153562 }
+    UNION  
+    {?company wdt:P31 wd:Q43229.
+     ?company wdt:P101 wd:Q184485}
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,nl,fr,de".
+                            ?company rdfs:label ?companyLabel. 
+                            ?instance rdfs:label ?instanceLabel. 
+                            ?kporgid rdfs:label ?kporgidLabel.}}
+  GROUP BY ?company ?companyLabel 
+  ORDER BY ASC(UCASE(str(?companyLabel)))
+`, {
+  sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+}).then(function (result) {
+  result.bindingsStream.on('data', function (data) {
+    document.getElementById("test").innerHTML += "<tr><td><a target='_blank' href=dynamic_productions.html?q=" + data.get('?company').value.split("Q").pop() + ">" + data.get('?companyLabel').value + "</a></td><td><a href=http://data.kunsten.be/organisations/" + data.get('?kporgid').value + ">Kunstenpunt</a></td><td>" + data.get('?instance').value + "</td></tr>";
+  });
+});
+</script>
+</html>

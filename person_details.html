@@ -1,0 +1,114 @@
+<html>
+<script src="http://rdf.js.org/comunica-browser/versions/1/packages/actor-init-sparql/comunica-browser.js"></script>
+<body>
+<h1 id="title"> </h1>
+<h2 id="title2"> </h2>
+<h3 id="title3"> </h3>
+<h2>Participated Productions</h2>
+
+<table id="test" border=1>
+	<tr>
+	<th>Production name</th>
+	<th>Role</th>
+	</tr>
+</table>
+
+<script language="JavaScript">  
+  function GetURLParameter(sParam)
+  {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+      var sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] == sParam) 
+      {
+        return sParameterName[1];   }  }  };
+
+  var q = GetURLParameter('q')
+
+  Comunica.newEngine().query(`
+  PREFIX wd: <http://www.wikidata.org/entity/>
+  PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+  PREFIX wikibase: <http://wikiba.se/ontology#>
+  PREFIX p: <http://www.wikidata.org/prop/>
+  PREFIX ps: <http://www.wikidata.org/prop/statement/>
+  PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX bd: <http://www.bigdata.com/rdf#>
+
+SELECT ?personLabel ?website
+WHERE {
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en,nl,fr,de".
+                           ?person rdfs:label ?personLabel.
+                         }
+  BIND(wd:Q${q} as ?person)                      
+  wd:Q${q} rdfs:label ?personLabel.
+OPTIONAL { ?person wdt:P856  ?website.}
+}
+ORDER BY ?personLabel
+LIMIT 1
+`, {
+  sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+}).then(function (result) {
+  result.bindingsStream.on('data', function (data) {
+
+   document.getElementById("title").innerHTML += "<b>" + data.get('?personLabel').value + "</b>";  
+
+   document.getElementById("title2").innerHTML += "<img src=" + 'https://commons.wikimedia.org/wiki/Special:FilePath/'+ data.get('?personLabel').value.split(' ')[0] + '_' + data.get('?personLabel').value.split(' ')[1] + '.jpg '+ "width='200'/>" ;  
+
+   document.getElementById("title3").innerHTML += "<b><a target='_blank' href=" + data.get('?website').value + ">" + "Go To Website" + "</a></b>"; 
+
+  });
+});
+</script>
+
+<script language="JavaScript">  
+  function GetURLParameter(sParam)
+  {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+      var sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] == sParam) 
+      {
+        return sParameterName[1];   }  }  };
+
+  var q = GetURLParameter('q')
+
+  Comunica.newEngine().query(`
+  PREFIX wd: <http://www.wikidata.org/entity/>
+  PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+  PREFIX wikibase: <http://wikiba.se/ontology#>
+  PREFIX p: <http://www.wikidata.org/prop/>
+  PREFIX ps: <http://www.wikidata.org/prop/statement/>
+  PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX bd: <http://www.bigdata.com/rdf#>
+
+	SELECT DISTINCT  ?production ?productionLabel 
+(GROUP_CONCAT(DISTINCT ?roleLabel; SEPARATOR=", ") AS ?role)
+WHERE {
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en,nl,fr,de".
+                         ?role rdfs:label ?roleLabel.
+                         ?production rdfs:label ?productionLabel.
+                         ?person rdfs:label ?personLabel. }
+  wd:Q${q} rdfs:label ?personLabel.
+  ?production ?role_ wd:Q${q};
+    wdt:P31 wd:Q43099500.
+  ?role wikibase:directClaim ?role_ .
+}
+GROUP BY  ?production ?productionLabel
+ORDER BY ?productionLabel
+`, {
+  sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+}).then(function (result) {
+  result.bindingsStream.on('data', function (data) {
+   
+    document.getElementById("test").innerHTML += "<tr><td><a target='_blank' href= 4vertical_detailsncredits.html?q=" + data.get('?production').value.split("Q").pop() + ">" + data.get('?productionLabel').value + "</a></td><td>" + data.get('?role').value + "</td></tr>";
+
+   });
+});
+</script>
+
