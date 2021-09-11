@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+A[href=""], A[href="#"] {
+  text-decoration: line-through;
+}
+</style>
+
+<body>
+<h1 id="name">No available name</h1>
+<p id="general_info">
+  Description: <span id="desc">No available description</span> <br>
+  Begin: <span id="begin-area">No available begin area</span> (<span id="begin">begin-date</span>) <br>
+  End: <span id="end-area">No available end area</span> (<span id="end">No available end date</span>)
+</p>
+
+<ul>
+  <li><a href="" id="webpage">Official webpage</a></li>
+  <li><a href="" id="matrix">Matrix New Music</a></li>
+  <li><a href="" id="svm">Studiecentrum Vlaamse Muziek</a></li>
+  <li><a href="" id="wikipedia">Wikipedia</a></li>
+</ul>
+
+<h2>Listen online</h2>
+<div>
+  <iframe id="spotifyembed" src="" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+</div>
+<div>
+	<ul>
+	  <li><a href="" id="spotify">Spotify</a></li>
+	  <li><a href="" id="itunes">iTunes</a></li>
+	  
+	  <li><a href="" id="soundcloud">SoundCloud</a></li>
+	  <li><a href="" id="youtube">Youtube</a></li>
+	</ul>
+</div>
+
+<h2><a href="" id="discogs">Discogs</a></h2>	
+<ul id="discogs_releases">
+</ul>
+
+<h2>Further data</h2>
+<ul>
+  <li><a href="" id="musicbrainz">Musicbrainz</a></li>
+  <li><a href="" id="wikidata">Wikidata</a></li>
+</ul>
+
+<h2>In Kunstenpunt overviews</h2>
+<ul id="collections">
+</ul>
+
+<script>
+
+function GetURLParameter(sParam)
+	{
+		var sPageURL = window.location.search.substring(1);
+		var sURLVariables = sPageURL.split('&');
+		for (var i = 0; i < sURLVariables.length; i++) 
+		{
+			var sParameterName = sURLVariables[i].split('=');
+			if (sParameterName[0] == sParam) 
+			{
+				return sParameterName[1];
+			}
+		}
+	};
+
+function get_rel_url_on_type(type, relurls) {
+  for (url in relurls) {
+    if (relurls[url]["type"] == type) {
+	  return relurls[url]["url"]["resource"];
+	}
+  }
+};
+
+function get_rel_url_on_domain(domain, relurls) {
+  for (url in relurls) {
+    if (relurls[url]["url"]["resource"].includes(domain)) {
+	  return relurls[url]["url"]["resource"];
+	}
+  }
+  return "#";
+};
+
+function get_mb_artist_info(q, callback){
+	var request = new XMLHttpRequest();
+	request.open('GET', 'https://musicbrainz.org/ws/2/artist/' + q + '?inc=url-rels&fmt=json', true);
+
+	request.onload = function() {
+	  if (this.status >= 200 && this.status < 400) {
+		var mb = JSON.parse(this.response)
+		console.log(mb);
+		document.getElementById("name").innerHTML = mb["name"];
+		document.getElementById("desc").innerHTML = mb["disambiguation"];
+		
+		try {document.getElementById("begin-area").innerHTML = mb["begin-area"]["name"]; } catch (error) {};
+		try { document.getElementById("end-area").innerHTML = mb["end-area"]["name"]; } catch (error) {};
+		try { document.getElementById("begin").innerHTML = mb["life-span"]["begin"]; } catch (error) {};
+		try { document.getElementById("end").innerHTML = mb["life-span"]["end"]; } catch (error) {};
+		
+		try { document.getElementById("webpage").setAttribute("href", get_rel_url_on_type("official homepage", mb["relations"])); } catch (error) {};
+		try { document.getElementById("matrix").setAttribute("href", get_rel_url_on_domain("matrix-new-music.be", mb["relations"])); } catch (error) {};
+		try { document.getElementById("svm").setAttribute("href", get_rel_url_on_domain("svm.be", mb["relations"])); } catch (error) {};
+		try { document.getElementById("wikipedia").setAttribute("href", get_rel_url_on_domain("wikipedia", mb["relations"])); } catch (error) {};
+		
+		try { document.getElementById("spotifyembed").setAttribute("src", get_rel_url_on_domain("open.spotify.com", mb["relations"]).replace("/artist/", "/embed/artist/")); } catch (error) {};
+		
+		try { document.getElementById("spotify").setAttribute("href", get_rel_url_on_domain("open.spotify.com", mb["relations"])); } catch (error) {};
+		try { document.getElementById("itunes").setAttribute("href", get_rel_url_on_domain("itunes.apple.com", mb["relations"])); } catch (error) {};
+		try { document.getElementById("soundcloud").setAttribute("href", get_rel_url_on_domain("soundcloud.com", mb["relations"])); } catch (error) {};
+		try { document.getElementById("youtube").setAttribute("href", get_rel_url_on_domain("youtube.com", mb["relations"])); } catch (error) {};
+		
+		try { document.getElementById("discogs").setAttribute("href", get_rel_url_on_type("discogs", mb["relations"])); } catch (error) {};
+		
+		try { document.getElementById("wikidata").setAttribute("href", get_rel_url_on_domain("wikidata.org", mb["relations"])); } catch (error) {};
+		try { document.getElementById("musicbrainz").setAttribute("href", "https://musicbrainz.org/artist/" + q); } catch (error) {};
+		
+		callback(mb, get_mb_collections);
+		
+	  } else {
+		// We reached our target server, but it returned an error
+	  }
+	};
+
+	request.onerror = function() {
+	  // There was a connection error of some sort
+	};
+
+	request.send();
+}
+
+function get_discogs_artist_info(mb, callback) { // TODO pagination!
+	discogs_id = get_rel_url_on_type("discogs", mb["relations"]).split("/").pop();
+	var request = new XMLHttpRequest();
+	request.open('GET', 'https://api.discogs.com/artists/' + discogs_id + "/releases", false);
+	request.onload = function() {
+	  if (this.status >= 200 && this.status < 400) {
+		// Success!
+		var data = JSON.parse(this.response);
+		console.log(data);
+		var discogs_releases = document.getElementById("discogs_releases")
+		for (release in data["releases"]) {
+		  var li = document.createElement("li");
+		  var a = document.createElement("a");
+		  a.setAttribute("href", "https://discogs.com/release/" + data["releases"][release]["id"]);
+		  a.setAttribute("target", "_blank");
+		  a.innerHTML = data["releases"][release]["title"];
+		  li.appendChild(a);
+		  discogs_releases.appendChild(li);
+		}
+		callback(mb['id']);
+	  } else {
+		// We reached our target server, but it returned an error
+			console.log("error???");
+	  }
+	};
+
+	request.onerror = function() {
+	  // There was a connection error of some sort
+	};
+
+	request.send();
+	
+}
+
+function get_mb_collections(q) { // TODO pagination
+	var request = new XMLHttpRequest();
+	request.open('GET', 'https://musicbrainz.org/ws/2/collection?artist=' + q + '&fmt=json', false);
+
+	request.onload = function() {
+	  if (this.status >= 200 && this.status < 400) {
+		var mb = JSON.parse(this.response)
+		for (collection in mb["collections"]) {
+		  if (mb["collections"][collection]["editor"] == "q_fdb") {
+		    var collist = document.getElementById("collections");
+			var col = document.createElement("li");
+			var a = document.createElement("a");
+			a.innerHTML = mb["collections"][collection]["name"]
+			a.setAttribute("href", "collection_template.html?collection_mbid=" + mb["collections"][collection]["id"]);
+			col.appendChild(a);
+			collist.appendChild(col);
+		  }
+		}
+	  } else {
+		// We reached our target server, but it returned an error
+			console.log("error???");
+	  }
+	};
+
+	request.onerror = function() {
+	  // There was a connection error of some sort
+	  console.log("errrrrrror");
+	};
+	
+    request.send();
+
+}
+
+var q = GetURLParameter('artist_mbid'); // e.g. 68b3b843-cb11-47c3-9cde-b793f70521ab
+get_mb_artist_info(q, get_discogs_artist_info);
+
+</script> 
+
+</body>
+</html>
