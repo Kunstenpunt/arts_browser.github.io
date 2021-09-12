@@ -1,4 +1,4 @@
-# wikidata_performing_arts_browser
+# arts browser for metadata
 A set of templates that load wikidata, musicbrainz, discogs, ... entities via sparql, comunica.js, regular apis, ...
 
 See some examples:
