@@ -5,10 +5,24 @@
 A[href=""], A[href="#"] {
   text-decoration: line-through;
 }
+
+iframe[src=""], iframe[src="#"] {
+  display: none;
+}
+
+div {
+  float: left;
+  padding: 25px;
+  max-width: 300px;
+}
 </style>
+
+<script src="https://rdf.js.org/comunica-browser/versions/1/packages/actor-init-sparql/comunica-browser.js"></script>
 
 <body>
 <h1 id="name">No available name</h1>
+<div>
+<h2>General information</h2>
 <p id="general_info">
   Description: <span id="desc">No available description</span> <br>
   Begin: <span id="begin-area">No available begin area</span> (<span id="begin">begin-date</span>) <br>
@@ -22,12 +36,15 @@ A[href=""], A[href="#"] {
   <li><a href="" id="wikipedia">Wikipedia</a></li>
 </ul>
 
-<h2>Listen online</h2>
-<div>
-  <iframe id="spotifyembed" src="" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+<a id="wikidatalink" target="_blank" href="#"><img width="100%" src="" id="wikidatapicture"></a>
+
 </div>
+
 <div>
-	<ul>
+<h2>Listen online</h2>
+  <iframe id="spotifyembed" src="" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+
+  <ul>
 	  <li><a href="" id="spotify">Spotify</a></li>
 	  <li><a href="" id="itunes">iTunes</a></li>
 	  
@@ -36,10 +53,13 @@ A[href=""], A[href="#"] {
 	</ul>
 </div>
 
+<div>
 <h2><a href="" id="discogs">Discogs</a></h2>	
 <ul id="discogs_releases">
 </ul>
+</div>
 
+<div>
 <h2>Further data</h2>
 <ul>
   <li><a href="" id="musicbrainz">Musicbrainz</a></li>
@@ -49,7 +69,7 @@ A[href=""], A[href="#"] {
 <h2>In Kunstenpunt overviews</h2>
 <ul id="collections">
 </ul>
-
+</div>
 <script>
 
 function GetURLParameter(sParam)
@@ -90,7 +110,6 @@ function get_mb_artist_info(q, callback){
 	request.onload = function() {
 	  if (this.status >= 200 && this.status < 400) {
 		var mb = JSON.parse(this.response)
-		console.log(mb);
 		document.getElementById("name").innerHTML = mb["name"];
 		document.getElementById("desc").innerHTML = mb["disambiguation"];
 		
@@ -138,7 +157,6 @@ function get_discogs_artist_info(mb, callback) { // TODO pagination!
 	  if (this.status >= 200 && this.status < 400) {
 		// Success!
 		var data = JSON.parse(this.response);
-		console.log(data);
 		var discogs_releases = document.getElementById("discogs_releases")
 		for (release in data["releases"]) {
 		  var li = document.createElement("li");
@@ -149,7 +167,7 @@ function get_discogs_artist_info(mb, callback) { // TODO pagination!
 		  li.appendChild(a);
 		  discogs_releases.appendChild(li);
 		}
-		callback(mb['id']);
+		callback(mb, get_wikidata_photo);
 	  } else {
 		// We reached our target server, but it returned an error
 			console.log("error???");
@@ -164,9 +182,10 @@ function get_discogs_artist_info(mb, callback) { // TODO pagination!
 	
 }
 
-function get_mb_collections(q) { // TODO pagination
+function get_mb_collections(q, callback) { // TODO pagination
+	q_id = q['id']
 	var request = new XMLHttpRequest();
-	request.open('GET', 'https://musicbrainz.org/ws/2/collection?artist=' + q + '&fmt=json', false);
+	request.open('GET', 'https://musicbrainz.org/ws/2/collection?artist=' + q_id + '&fmt=json', false);
 
 	request.onload = function() {
 	  if (this.status >= 200 && this.status < 400) {
@@ -182,6 +201,8 @@ function get_mb_collections(q) { // TODO pagination
 			collist.appendChild(col);
 		  }
 		}
+		wikidata_q = get_rel_url_on_domain("wikidata.org", q["relations"]).split("/").pop();
+		callback(wikidata_q);
 	  } else {
 		// We reached our target server, but it returned an error
 			console.log("error???");
@@ -196,6 +217,31 @@ function get_mb_collections(q) { // TODO pagination
     request.send();
 
 }
+
+function get_wikidata_photo(wikidata_id) {
+
+	var myImage = document.getElementById("wikidatapicture");
+	var myLink = document.getElementById("wikidatalink");
+
+	Comunica.newEngine().query(`
+		PREFIX wd: <http://www.wikidata.org/entity/>
+		PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+		SELECT ?artist ?image 
+		WHERE { 
+		  BIND(wd:${wikidata_id} as ?artist)
+		  ?artist wdt:P18 ?image.
+		}
+	`, {
+		sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+	}).then(function (result) {
+		result.bindingsStream.on('data', function (data) {
+			console.log("data", data["_root"]["entries"]);
+			myImage.setAttribute("src", data["_root"]["entries"][1][1]["value"]);
+			myLink.setAttribute("href", data["_root"]["entries"][0][1]["value"]);
+		});
+	});
+	
+};
 
 var q = GetURLParameter('artist_mbid'); // e.g. 68b3b843-cb11-47c3-9cde-b793f70521ab
 get_mb_artist_info(q, get_discogs_artist_info);
