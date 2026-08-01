@@ -29,6 +29,8 @@
 <table id="credits" border=1>
 </table>
 
+<p id="wikidata"></p>
+
 <script language="JavaScript">  
   function GetURLParameter(sParam)
   {
@@ -60,7 +62,7 @@ WHERE {
   BIND(wd:Q${q} as ?production)
   
   ?production ?credit ?c .
-  FILTER(?credit IN (wdt:P272, wdt:P57, wdt:P5126, wdt:P1877, wdt:P3174, wdt:P86, wdt:P50, wdt:P87, wdt:P676, wdt:P655, wdt:P5202, wdt:P6086, wdt:P3300, wdt:P5024, wdt:P1809, wdt:P175, wdt:P664, wdt:P4608, wdt:P2554, wdt:P2515, wdt:P4805, wdt:P5026, wdt:P5028, wdt:P5881, wdt:P2554, wdt:P162, wdt:P170))
+  FILTER(?credit IN (wdt:P272, wdt:P57, wdt:P5126, wdt:P1wdt:P3174, wdt:P86, wdt:P50, wdt:P87, wdt:P676, wdt:P655, wdt:P5202, wdt:P6086, wdt:P3300, wdt:P5024, wdt:P1809, wdt:P175, wdt:P664, wdt:P4608, wdt:P2554, wdt:P2515, wdt:P4805, wdt:P5026, wdt:P5028, wdt:P5881, wdt:P2554, wdt:P162, wdt:P170))
   ?creditDirect wikibase:directClaim ?credit .
   ?creditDirect rdfs:label ?creditDirectLabel .
   FILTER (lang(?creditDirectLabel) = "nl")
@@ -174,7 +176,7 @@ WHERE {
       ?locatieStatement pq:P585 ?eersteOpvoeringDatumB .
     }
   }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "nl".}
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en".}
 }
 GROUP BY ?production ?productionLabel ?eersteOpvoeringLocatieALabel ?eersteOpvoeringDatumALabel ?eersteOpvoeringLocatieBLabel ?eersteOpvoeringDatumBLabel
 `, {
@@ -188,6 +190,7 @@ GROUP BY ?production ?productionLabel ?eersteOpvoeringLocatieALabel ?eersteOpvoe
   document.getElementById("language").innerHTML += "<td>" + data.get('languages').value + "</td>";
   document.getElementById("location1stperformance").innerHTML += "<td>" + data.get('eersteOpvoeringLocatieALabel').value + "</td>";
   document.getElementById("date1stperformance").innerHTML += "<td>" + data.get('eersteOpvoeringDatumALabel').value + "</td>";
+  document.getElementById("wikidata").innerHTML += "<a target='_blank' href='" + data.get('production').value + "'>Verrijk deze informatie op wikidata</a>";
   });
 });
 

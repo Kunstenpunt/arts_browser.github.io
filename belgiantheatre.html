@@ -1,0 +1,48 @@
+<html>
+<script src="https://rdf.js.org/comunica-browser/versions/v4/engines/query-sparql/comunica-browser.js"></script>
+
+<body>
+<h1>Years</h1>
+<table id="overview" border=1>
+<tr>
+<th>Year</th>
+<th>Amount of productions</th>
+</tr>
+</table>
+
+<script language="JavaScript">
+new Comunica.QueryEngine().queryBindings(`
+
+PREFIX wd: <http://www.wikidata.org/entity/>
+  PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+  PREFIX wikibase: <http://wikiba.se/ontology#>
+  PREFIX p: <http://www.wikidata.org/prop/>
+  PREFIX ps: <http://www.wikidata.org/prop/statement/>
+  PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX bd: <http://www.bigdata.com/rdf#>
+
+SELECT ?year (COUNT(*) AS ?production_count)
+
+WHERE {
+  ?production wdt:P1191 ?date_of_first_presentation.
+  ?production wdt:P4647 ?location_of_first_presentation.
+  ?location_of_first_presentation wdt:P17 wd:Q31.
+  BIND(YEAR(xsd:dateTime(?date_of_first_presentation)) AS ?year)
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "nl".}
+}
+
+GROUP BY ?year
+ORDER BY ASC(?year)
+
+`, {
+  sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+})
+.then(function (bindingsStream) {
+  bindingsStream.on('data', function (data) {
+    document.getElementById("overview").innerHTML += "<tr>" + "<td><a href='dynamic_productions_year.html?y=" + data.get('year').value +"'>" + data.get('year').value + "</a></td>" + "<td>" + data.get('production_count').value + "</td></tr>";
+  });
+});
+</script>
+</html>

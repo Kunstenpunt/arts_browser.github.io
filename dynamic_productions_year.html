@@ -1,0 +1,68 @@
+<html>
+<script src="https://rdf.js.org/comunica-browser/versions/v4/engines/query-sparql/comunica-browser.js"></script>
+
+<body>
+<h1>Productions</h1>
+<table id="calendar" border=1>
+<tr>
+<th>Production name</th>
+<th>Production companies</th>
+<th>Date of first presentation</th>
+</tr>
+</table>
+
+<script language="JavaScript">
+  function GetURLParameter(sParam)
+  {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+      var sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] == sParam) 
+      {
+        return sParameterName[1];   }  }  };
+
+  var y = GetURLParameter('y')
+
+  new Comunica.QueryEngine().queryBindings(`
+
+PREFIX wd: <http://www.wikidata.org/entity/>
+  PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+  PREFIX wikibase: <http://wikiba.se/ontology#>
+  PREFIX p: <http://www.wikidata.org/prop/>
+  PREFIX ps: <http://www.wikidata.org/prop/statement/>
+  PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX bd: <http://www.bigdata.com/rdf#>
+
+SELECT DISTINCT
+?production ?productionLabel (GROUP_CONCAT(?production_company_label; SEPARATOR=", ") AS ?production_companies) ?date_of_first_presentation ?location_of_first_presentationLabel
+
+WHERE {
+  BIND(${y} as ?year)
+
+  ?production wdt:P1191 ?date_of_first_presentation.
+  FILTER(YEAR(?date_of_first_presentation) = ?year).
+  ?production wdt:P4647 ?location_of_first_presentation.
+  ?location_of_first_presentation wdt:P17 wd:Q31.
+  OPTIONAL { ?production wdt:P272 ?production_company.
+			 ?production_company rdfs:label ?production_company_label.
+	         FILTER(LANG(?production_company_label) = "nl").
+  }
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "nl, en".}
+}
+GROUP BY ?production ?productionLabel ?date_of_first_presentation ?location_of_first_presentationLabel ?coord
+ORDER BY ASC(?date_of_first_presentation)
+
+`, {
+  sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
+})
+.then(function (bindingsStream) {
+  bindingsStream.on('data', function (data) {
+    document.getElementById("calendar").innerHTML += "<tr>" + "<td><a href='dynamic_details_credits.html?q=" + data.get('production').value.split("Q")[1] +"'>" + data.get('productionLabel').value + "</a></td>" + "<td>" + data.get('production_companies').value + "</td>"+ "<td>" + data.get('date_of_first_presentation').value + "</td></tr>";
+  });
+});
+</script>
+</html>
