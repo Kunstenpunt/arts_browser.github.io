@@ -257,7 +257,7 @@ GROUP BY ?production ?productionLabel ?instance_ofLabel ?genreLabel ?production_
   result.bindingsStream.on('data', function (data) {
   document.getElementById("name").innerHTML += "<td>" + data.get('?productionLabel').value + "</td>";
   document.getElementById("instance").innerHTML += "<td>" + data.get('?instance_ofLabel').value + "</td>";
-  document.getElementById("genre").innerHTML += "<td>" + data.get('?genreLAbel').value + "</td>";
+  document.getElementById("genre").innerHTML += "<td>" + data.get('?genreLabel').value + "</td>";
   document.getElementById("production_company").innerHTML += "<td>" + data.get('?production_companyLabel').value + "</td>";
   document.getElementById("language").innerHTML += "<td>" + data.get('?languageLabel').value + "</td>";
   document.getElementById("location1stperformance").innerHTML += "<td>" + data.get('?eersteOpvoeringLocationALabel').value + "</td>";
