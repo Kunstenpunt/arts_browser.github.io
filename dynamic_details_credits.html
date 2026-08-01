@@ -224,7 +224,7 @@ PREFIX bd: <http://www.bigdata.com/rdf#>
 SELECT ?production ?productionLabel ?instance_ofLabel ?genreLabel ?production_companyLabel ?languageLabel ?eersteOpvoeringLocatieALabel ?eersteOpvoeringDatumALabel ?eersteOpvoeringLocatieBLabel ?eersteOpvoeringDatumBLabel
 
 WHERE {
-  BIND(wd:Q$(q) as ?production)
+  BIND(wd:Q${q} as ?production)
   OPTIONAL { ?production wdt:P31 ?instance_of.}  
   OPTIONAL { ?production wdt:P136 ?genre.}
   OPTIONAL { ?production wdt:P272 ?production_company.}
@@ -250,12 +250,6 @@ WHERE {
   SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],nl,fr,de".}
 }
 GROUP BY ?production ?productionLabel ?instance_ofLabel ?genreLabel ?production_companyLabel ?languageLabel ?eersteOpvoeringLocatieALabel ?eersteOpvoeringLocatieBLabel ?eersteOpvoeringDatumALabel ?eersteOpvoeringDatumBLabel
-  OPTIONAL { ?production wdt:P272 ?production_company.}
-  OPTIONAL { ?production wdt:P407 ?language.}
-  OPTIONAL { ?production wdt:P4647 ?location_1stperformance.}
-  OPTIONAL { ?production wdt:P5935 ?KunstenpuntID.}
- }
-GROUP BY ?production ?productionLabel
 
 `, {
   sources: [{ type: 'sparql', value: 'https://query.wikidata.org/sparql' }],
